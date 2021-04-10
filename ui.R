@@ -28,13 +28,13 @@ shinyUI(navbarPage(theme = shinytheme("cerulean"),
     
     # Panel principal para mostrar resultados ----
     mainPanel(
-      
       # resultado: resumen de los datos ----
+      strong("Se presenta la tabla con las caracteristicas descriptivas de la variable:"),
       verbatimTextOutput("summary"),
       
       # Salida: tabla HTML con el número 
       # solicitado de observaciones ----
-      tableOutput ("view"),
+      tableOutput("view"),
 
       # Resultado: bar ----
       plotOutput(outputId = "bar"), # tipo de resultado
@@ -50,20 +50,27 @@ shinyUI(navbarPage(theme = shinytheme("cerulean"),
       
       # Salida: Tablas / graficos, summarys ----
       tabsetPanel(type = "tabs",
-                  tabPanel("Gráfico de violin", #Ajuste
+                  tabPanel("Variables continuas", #Ajuste
                            selectInput(inputId = "datos2",
                                        label = "Escoja una variable continua para comparar con ajuste:",
                                        choices = names(fpe)),
-                           verbatimTextOutput("info"),
+                           #verbatimTextOutput("info"),
+                           #label = ,
+                           strong("Al realizar la prueba de Wilcoxon dio un valor p de:"),
+                           verbatimTextOutput("analisis1"),
                            plotOutput("dispersion1", click = "plot_click"),
                            plotOutput("dispersion", click = "plot_click")
                            ),
                   
-                  tabPanel("Gráfico de barras",
+                  tabPanel("Variables categoricas",
                            selectInput(inputId = "datos3",
                                        label = "Escoja una variable categórica para comparar con cambio:",
                                        choices = names(fpe)),
+                           strong("Al realizar la prueba de Chi2 dio un valor p de:"),
+                           verbatimTextOutput("analisis3"),
+                           verbatimTextOutput("tablaFrecCategorica"),
                            plotOutput("dispersion2"),
+                           verbatimTextOutput("tablaPorcCategorica"),
                            plotOutput("dispersion3")),
                   
                   tabPanel("Producto", 

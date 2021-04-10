@@ -6,19 +6,23 @@
 server <- function(input, output) { # server es una función
   # con argumentos de entrada y de salida
   
-  # Devolver el conjunto de datos solicitado ----
   
-  arreglo <- names(fpe)
   
-  crear_inputDatos = function(nombre){
-    nombre = fpe$nombre
-  }
+  # arreglo <- names(fpe)
+  # 
+  # crear_inputDatos = function(nombre){
+  #   nombre = fpe$nombre
+  # }
   
-  for (i in 1:length(arreglo)){
-    x <- i
-    nombres_datos<- paste("'", arreglo, "'", " = ", "fpe$", arreglo, sep = "" )
-  }
+  # for (i in 1:length(arreglo)){
+  #   x <- i
+  #   nombres_datos<- paste("'", arreglo, "'", " = ", "fpe$", arreglo, sep = "" )
+  # }
+
+# Analisis de univariables ------------------------------------------------
+
   
+  # Devolver el conjunto de datos solicitado basado en las opcionse a analizar ----
   datos_entrada <- reactive({
     switch(input$datos,  
            "encounter_id" = fpe$encounter_id,
@@ -225,6 +229,11 @@ server <- function(input, output) { # server es una función
     boxplot(datos_entrada(), col="lavender")
     title(paste("Gráfico de caja de la variable",input$datos), col.main="red")
   })
+
+
+# Analisis bivariado con variable cuantitativa ----------------------------
+
+  
   
   datos_entrada2 <- reactive({
     switch(input$datos2,
@@ -405,32 +414,47 @@ server <- function(input, output) { # server es una función
            )
   })
   
+  output$analisis1 <- renderPrint({
+    (wilcox.test(datos_entrada2() ~ fpe$hospital_death))$p.value
+  })
+  
+  output$dispers <- renderPlot({
+    ggplot(fpe, aes(fpe$datos_entrada2())) + 
+      geom_histogram() + 
+      facet_grid(fpe$hospital_death ~ .)
+  }) 
   output$dispersion <- renderPlot({
-    vioplot(datos_entrada2() ~ fpe$hospital_death, horizontal = TRUE, #y =datos_entrada2() ,
-         main = paste("Gráfico de cajas de hospital_death vs",input$datos2),
-         ylab = names(fpe)[3],xlab = "",
-         sub="Valor 0 son los que sobrevivieron y valor 1 fallecieron",
-         pch=20,cex = 1.5,# pch se cambia para elegir tipo de punti y cex su tamaño
-         col =  topo.colors(nrow(fpe)),#, # color de los puntos
-         col.axis="blue", # color de los ejes
-         col.lab="dark violet", # color de las etiquetas
-         col.main="red", # color del titulo
-         col.sub="orange", # color del subtitulo
-         fg="turquoise",
-         
-         
-         
-         font.axis=3,
-         font.lab=4,
-         font.main=1,
-         font.sub=2    ) 
+    ggplot(fpe, aes(datos_entrada2())) + 
+      geom_density() + 
+      facet_grid(fpe$hospital_death ~ .)
+  })  
+  output$dispe <- renderPlot({
+     hist(datos_entrada2() ~ fpe$hospital_death, horizontal = TRUE, #y =datos_entrada2() ,
+         main = paste("Gráfico de cajas de hospital_death vs",input$datos2) #,
+         # ylab = names(fpe)[3],xlab = "",
+         # sub="Valor 0 son los que sobrevivieron y valor 1 fallecieron",
+         # pch=20,cex = 1.5,# pch se cambia para elegir tipo de punti y cex su tamaño
+         # col =  topo.colors(nrow(fpe)),#, # color de los puntos
+         # col.axis="blue", # color de los ejes
+         # col.lab="dark violet", # color de las etiquetas
+         # col.main="red", # color del titulo
+         # col.sub="orange", # color del subtitulo
+         # fg="turquoise",
+         # 
+         # 
+         # 
+         # font.axis=3,
+         # font.lab=4,
+         # font.main=1,
+         # font.sub=2    
+         ) 
     
   })
 
   output$dispersion1 <- renderPlot({
     boxplot(datos_entrada2() ~ fpe$hospital_death,  #y =datos_entrada2() ,
             main = paste("Gráfico de cajas de hospital_death vs",input$datos2),
-            ylab = names(fpe)[3],xlab = "",
+            xlab = names(fpe)[3],ylab = "Frecuencia",
             sub="Valor 0 son los que sobrevivieron y valor 1 fallecieron",
             pch=20,cex = 1.5,# pch se cambia para elegir tipo de punti y cex su tamaño
             col =  topo.colors(nrow(fpe)),#, # color de los puntos
@@ -449,6 +473,11 @@ server <- function(input, output) { # server es una función
     
   })    
 
+
+# Analisis bivariado con variable cualitativa -----------------------------
+
+  
+  
   datos_entrada3 <- reactive({
     switch(input$datos3,
            "encounter_id" = fpe$encounter_id,
@@ -627,6 +656,14 @@ server <- function(input, output) { # server es una función
            "apache_2_bodysystem" = fpe$apache_2_bodysystem
            )
   })
+
+  output$analisis3 <- renderPrint({
+    chisq.test(table(fpe$hospital_death, datos_entrada3()))$p.value
+  })  
+    
+  output$tablaFrecCategorica <- renderPrint({
+    table(datos_entrada3(), fpe$hospital_death)
+  })
   
   output$dispersion2 <- renderPlot({
     barplot(table(fpe$hospital_death, datos_entrada3()), beside = TRUE, 
@@ -652,6 +689,10 @@ server <- function(input, output) { # server es una función
     
   })
 
+  output$tablaPorcCategorica <- renderPrint({
+    round(prop.table(table(datos_entrada3(), fpe$hospital_death), margin = 1)*100, digits = 2)
+  })  
+  
   output$dispersion3 <- renderPlot({
     barplot(prop.table(table(fpe$hospital_death, datos_entrada3()), margin = 2)*100, beside = TRUE, 
             main = paste("Gráfico de barras entre hospital_death y ",input$datos3),

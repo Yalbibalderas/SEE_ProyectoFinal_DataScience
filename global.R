@@ -30,6 +30,7 @@ fpe <- fpe %>%
 #fpe <-  read.table("https://drive.google.com/drive/trash?fbclid=IwAR35_tKG4ulIQEdORdvwF6co5Xbn8ZCm8AiLy7_DOxBjYHO2aGADCsrXPZ4")
 
 
+
 xyclick <- function(e){
   e$x 
   e$y

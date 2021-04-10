@@ -1,7 +1,6 @@
 # Por último, la función shinyApp crea objetos 
 # de la aplicación shiny a partir de ui y de server.
 #library(shiny)
-
 library(ggplot2)
 library(shinythemes)
 library(vioplot)

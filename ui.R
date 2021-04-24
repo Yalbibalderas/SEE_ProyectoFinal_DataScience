@@ -1,17 +1,26 @@
 # El objeto de interfaz de usuario (ui) 
 # controla el diseño y la apariencia de la aplicación.
 
-shinyUI(navbarPage(theme = shinytheme("cerulean"),
+shinyUI(navbarPage(theme = shinytheme("cerulean"), #cerulean es el Fondo de la pantalla
   # titulo de la App  ----
   "Datathom UCI",
   
   # Diseño de la barra lateral con definiciones de entrada
   # y salida ----
-  tabPanel( "Descripción de los datos",
+  tabPanel( "Análisis exploratorio de los datos",
   sidebarLayout(
     # Panel de la barra lateral para entradas ----
-    sidebarPanel(#"Cargar archivo",
-                 #fileInput("GetFile", "Cargar archivo"),
+    sidebarPanel(h4("Equipo de Científicos de Datos"),
+                 
+                 img(src='https://553801.smushcdn.com/1938437/wp-content/uploads/2020/08/Jaime_Soria_Viteri-400x-300x400.jpg?lossy=1&strip=1&webp=1', height = 100, width = 75),
+                 p("Dr. Jaime Soria"),
+                 img(src='https://pbs.twimg.com/profile_images/1010320061192552450/Kw7s7nTu_400x400.jpg', height = 100, width = 75),
+                 p("Ing. Yalbi Balderas"),
+                 img(src='https://media-exp1.licdn.com/dms/image/C4E03AQHC95126yf7bQ/profile-displayphoto-shrink_200_200/0/1517435583627?e=1620864000&v=beta&t=3wkN8RecgLdc_9EOIpCxeckpwiZZ7uwpt7yKnn4vPuU', height = 100, width = 75),
+                 p("Ing. Miriam Lupercio"),
+                 img(src='', height = 100, width = 75),
+                 p("Ing. Belen Escola"),
+                 hr(),
       
       # Entrada: deslizador para el número de entradas ----
       # Entrada: Seleccionador para elegir un elemento
@@ -29,6 +38,28 @@ shinyUI(navbarPage(theme = shinytheme("cerulean"),
     # Panel principal para mostrar resultados ----
     mainPanel(
       # resultado: resumen de los datos ----
+      h2("Bienvenido al analisis exploratorio del Datathon 2020"),
+      p("Cuando un paciente es trasladado a la Unidad de Cuidados Intensivos (UCI) 
+      es porque su salud podría deteriorarse rápidamente. Si basados en los datos de varias mediciones de estos pacientes 
+      logramos predecir la probabilidad de mortalidad y el grado de deterioro de 
+      los diferentes órganos, podríamos responder la amenaza con anticipación y 
+      darle al paciente la forma más avanzada de cuidados posibles para disminuir 
+      su riesgo de mortalidad."),
+      br(),
+      p("Es con esto en mente que se desarrollo la siguiente applicación para
+        que todos los médicos del mundo puedan revisarla y analizar. De esta forma 
+        podran como las diferentes carateristicas clínicas y demográficas, signos vitales, 
+        resultados de laboratorio y comorbilidades pueden influir en la mortalidad
+        del paciente."),
+      
+      br(),
+      
+      h3("Análisis estadistico descriptivo univariado"),
+      
+      p("A continuacion presentamos de forma dinamica el analisis estadistico 
+        desciptivo univariado de todas las variables de la base de datos"), 
+      br(),
+      
       strong("Se presenta la tabla con las caracteristicas descriptivas de la variable:"),
       verbatimTextOutput("summary"),
       
@@ -46,6 +77,11 @@ shinyUI(navbarPage(theme = shinytheme("cerulean"),
       # outputId muestra el nombre del objeto creado en server
       # del que se va a imprimir el resultado
       
+      
+      
+      
+    
+      
 
       
       # Salida: Tablas / graficos, summarys ----
@@ -54,12 +90,16 @@ shinyUI(navbarPage(theme = shinytheme("cerulean"),
                            selectInput(inputId = "datos2",
                                        label = "Escoja una variable continua para comparar con ajuste:",
                                        choices = names(fpe)),
-                           #verbatimTextOutput("info"),
-                           #label = ,
                            strong("Al realizar la prueba de Wilcoxon dio un valor p de:"),
                            verbatimTextOutput("analisis1"),
                            plotOutput("dispersion1", click = "plot_click"),
-                           plotOutput("dispersion", click = "plot_click")
+                           plotOutput("dispersion", click = "plot_click"),
+                           #verbatimTextOutput("info"),
+                           #label = ,
+                           # strong("Al realizar la prueba de Wilcoxon dio un valor p de:"),
+                           # verbatimTextOutput("analisis1"),
+                           # plotOutput("dispersion1", click = "plot_click"),
+                           # plotOutput("dispersion", click = "plot_click")
                            ),
                   
                   tabPanel("Variables categoricas",

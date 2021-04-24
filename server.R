@@ -7,17 +7,7 @@ server <- function(input, output) { # server es una función
   # con argumentos de entrada y de salida
   
   
-  
-  # arreglo <- names(fpe)
-  # 
-  # crear_inputDatos = function(nombre){
-  #   nombre = fpe$nombre
-  # }
-  
-  # for (i in 1:length(arreglo)){
-  #   x <- i
-  #   nombres_datos<- paste("'", arreglo, "'", " = ", "fpe$", arreglo, sep = "" )
-  # }
+
 
 # Analisis de univariables ------------------------------------------------
 
@@ -35,7 +25,7 @@ server <- function(input, output) { # server es una función
            "ethnicity" = fpe$ethnicity,
            "gender" = fpe$gender,
            "height" = fpe$height,
-           "ospital_admit_source" = fpe$ospital_admit_source,
+           "hospital_admit_source" = fpe$hospital_admit_source,
            "icu_admit_source" = fpe$icu_admit_source, #12
            "icu_id" = fpe$icu_id,
            "icu_stay_type" = fpe$icu_stay_type,
@@ -198,7 +188,11 @@ server <- function(input, output) { # server es una función
            "lymphoma" = fpe$lymphoma,
            "solid_tumor_with_metastasis" = fpe$solid_tumor_with_metastasis,
            "apache_3j_bodysystem" = fpe$apache_3j_bodysystem,
-           "apache_2_bodysystem" = fpe$apache_2_bodysystem
+           "apache_2_bodysystem" = fpe$apache_2_bodysystem,
+           "age_cat" = fpe$age_cat,
+           "bmi_cat" = fpe$bmi_cat,
+           "preIcuLosDays_cat" = fpe$preIcuLosDays_cat,
+           "escala_glasgow" = fpe$escala_glasgow
            )
   })
   
@@ -415,21 +409,21 @@ server <- function(input, output) { # server es una función
   })
   
   output$analisis1 <- renderPrint({
-    (wilcox.test(datos_entrada2() ~ fpe$hospital_death))$p.value
+    (wilcox.test(datos_entrada() ~ fpe$hospital_death))$p.value
   })
   
   output$dispers <- renderPlot({
-    ggplot(fpe, aes(fpe$datos_entrada2())) + 
+    ggplot(fpe, aes(fpe$datos_entrada())) + 
       geom_histogram() + 
       facet_grid(fpe$hospital_death ~ .)
   }) 
   output$dispersion <- renderPlot({
-    ggplot(fpe, aes(datos_entrada2())) + 
+    ggplot(fpe, aes(datos_entrada())) + 
       geom_density() + 
       facet_grid(fpe$hospital_death ~ .)
   })  
   output$dispe <- renderPlot({
-     hist(datos_entrada2() ~ fpe$hospital_death, horizontal = TRUE, #y =datos_entrada2() ,
+     hist(datos_entrada() ~ fpe$hospital_death, horizontal = TRUE, #y =datos_entrada2() ,
          main = paste("Gráfico de cajas de hospital_death vs",input$datos2) #,
          # ylab = names(fpe)[3],xlab = "",
          # sub="Valor 0 son los que sobrevivieron y valor 1 fallecieron",
@@ -452,7 +446,7 @@ server <- function(input, output) { # server es una función
   })
 
   output$dispersion1 <- renderPlot({
-    boxplot(datos_entrada2() ~ fpe$hospital_death,  #y =datos_entrada2() ,
+    boxplot(datos_entrada() ~ fpe$hospital_death,  #y =datos_entrada2() ,
             main = paste("Gráfico de cajas de hospital_death vs",input$datos2),
             xlab = names(fpe)[3],ylab = "Frecuencia",
             sub="Valor 0 son los que sobrevivieron y valor 1 fallecieron",
@@ -658,15 +652,15 @@ server <- function(input, output) { # server es una función
   })
 
   output$analisis3 <- renderPrint({
-    chisq.test(table(fpe$hospital_death, datos_entrada3()))$p.value
+    chisq.test(table(fpe$hospital_death, datos_entrada()))$p.value
   })  
     
   output$tablaFrecCategorica <- renderPrint({
-    table(datos_entrada3(), fpe$hospital_death)
+    table(datos_entrada(), fpe$hospital_death)
   })
   
   output$dispersion2 <- renderPlot({
-    barplot(table(fpe$hospital_death, datos_entrada3()), beside = TRUE, 
+    barplot(table(fpe$hospital_death, datos_entrada()), beside = TRUE, 
             main = paste("Gráfico de barras entre hospital_death y ",input$datos3),
             xlab = "hospital_death", ylab = "Frecuencia",
             sub="Valor 0 son los que sobrevivieron y valor 1 fallecieron"
@@ -690,11 +684,11 @@ server <- function(input, output) { # server es una función
   })
 
   output$tablaPorcCategorica <- renderPrint({
-    round(prop.table(table(datos_entrada3(), fpe$hospital_death), margin = 1)*100, digits = 2)
+    round(prop.table(table(datos_entrada(), fpe$hospital_death), margin = 1)*100, digits = 2)
   })  
   
   output$dispersion3 <- renderPlot({
-    barplot(prop.table(table(fpe$hospital_death, datos_entrada3()), margin = 2)*100, beside = TRUE, 
+    barplot(prop.table(table(fpe$hospital_death, datos_entrada()), margin = 2)*100, beside = TRUE, 
             main = paste("Gráfico de barras entre hospital_death y ",input$datos3),
             xlab = "hospital_death", ylab = "Porcentaje",
             sub="Valor 0 son los que sobrevivieron y valor 1 fallecieron"

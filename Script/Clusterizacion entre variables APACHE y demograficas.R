@@ -1,4 +1,4 @@
-
+#
 # Importar librerias generales --------------------------------------------
 
 library(openxlsx) # Importar y exportar a excel

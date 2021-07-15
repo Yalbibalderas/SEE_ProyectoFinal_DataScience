@@ -2,6 +2,8 @@ library(psych)
 #Existe diferencia en incidencia de mortalidad
 # en diferentes UCI
 
+#Test
+
 #Crear data frame de la tabla con la info de hopsital_id y mortalidad
 #opcion una para crear mortalidad: Mortalidad_hospitalaria <- as.data.frame.matrix(table(fpe$hospital_id, fpe$hospital_death))
 

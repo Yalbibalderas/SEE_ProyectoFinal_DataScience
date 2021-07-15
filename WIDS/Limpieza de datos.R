@@ -14,7 +14,7 @@ library(magrittr)
 training_v2 <- read.csv(file = "Data/training_v2.csv")
 unlabeled <- read.csv(file = "Data/unlabeled.csv")
 
-# Limpiesa de la base de datos --------------------------------------------
+# Limpieza de la base de datos --------------------------------------------
 
 #elective_surgery= The common national or cultural tradition which the person belongs to
 

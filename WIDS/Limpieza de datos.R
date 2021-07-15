@@ -2,14 +2,15 @@
 
 library(openxlsx)
 library(tidyverse)
-library(magrittr) 
+library(magrittr)
+library(pROC)
 
 # Generar ambiente --------------------------------------------------------
 #se pone como comentario para shiny
 # setwd("C:/Users/DELL/OneDrive/Escritorio/clasesShinySEE/datathon/Datos")
 # getwd()
 
-# Bajar base de datos -----------------------------------------------------
+# Importar base de datos -----------------------------------------------------
 
 training_v2 <- read.csv(file = "Data/training_v2.csv")
 unlabeled <- read.csv(file = "Data/unlabeled.csv")
@@ -18,18 +19,18 @@ unlabeled <- read.csv(file = "Data/unlabeled.csv")
 
 #elective_surgery= The common national or cultural tradition which the person belongs to
 
-
 data_demo <- training_v2
 data_demo$encounter_id <- NULL #se retira porque es un identificador
 data_demo$patient_id <- NULL #se retira porque es un identificador
 data_demo$icu_id <- NULL #se retira porque es un identificador
 data_demo$readmission_status <- NULL # se retira porque todos son 0
 data_demo$icu_admit_type <- NULL # se retira porque no tiene elementos
-data_demo$ethnicity  # No se usa porque parece que esta variable no influye, hispanos son 3.600 y nativos 770, son los que tienen mayor prevalencia de mortalidad pero es muy baja
+data_demo$ethnicity  # no se usa porque parece que esta variable no influye, hispanos son 3.600 y nativos 770, son los que tienen mayor prevalencia de mortalidad pero es muy baja
 data_demo$height  # se retira porque parece ser que no influye 
 data_demo$weight  # se retira porque su influencia parece ya estar recogida en BMI
 data_demo$pre_icu_los_days <- abs(data_demo$pre_icu_los_days) #se transforman los numeros negativos en absolutos porque asumo error al digitar y en algunos centros lo reportaron como negativo
 data_demo$pre_icu_los_days <- round(data_demo$pre_icu_los_days, digits = 0) #se le quita los decimales al los dias de hospitalizacion
+
 data_demo$hospital_death <- factor(data_demo$hospital_death,
                                    levels = c(0,1),
                                    labels = c("Sobrevivió", 
@@ -45,20 +46,16 @@ data_demo$apache_post_operative <- factor(data_demo$apache_post_operative,
                                           labels = c("No", 
                                                      "Si"))
 
-
-
 data_demo[data_demo$gender == "",] <- NA #transformar los espacios vacios en NA
 
 data_demo$intubated_apache <- factor(data_demo$intubated_apache,
                                      levels = c(0,1),
                                      labels = c("No", 
                                                 "Si"))
-
 data_demo$ventilated_apache <- factor(data_demo$ventilated_apache,
                                       levels = c(0,1),
                                       labels = c("No", 
                                                  "Si"))
-
 data_demo$arf_apache <- factor(data_demo$arf_apache,
                                       levels = c(0,1),
                                       labels = c("No", 
@@ -103,50 +100,57 @@ data_demo$solid_tumor_with_metastasis <- factor(data_demo$solid_tumor_with_metas
                                levels = c(0,1),
                                labels = c("No", 
                                           "Si"))
+
 # Glasgow -----------------------------------------------------------------
 data_demo <- mutate(data_demo, glasgow_apache = 
                       gcs_eyes_apache + 
                       gcs_motor_apache + 
                       gcs_verbal_apache)
 
-#Se transforma las variables de la escala de glasgow de variable continua a variable ordinal
+#Se transforman las variables de la escala de Glasgow de variable continua a variable ordinal
 data_demo$gcs_eyes_apache <- factor(data_demo$gcs_eyes_apache, ordered = TRUE)
 data_demo$gcs_motor_apache <- factor(data_demo$gcs_motor_apache, ordered = TRUE)                                     
 data_demo$gcs_verbal_apache <- factor(data_demo$gcs_verbal_apache, ordered = TRUE)
 
+data_demo2 <- data_demo %>% filter(!is.na(ventilated_apache))
+data_demo2
 
-
-#grafico
-ggplot(data_demo, aes(log(glasgow_apache))) +
+# Gráfico
+ggplot(data_demo2, aes(log(glasgow_apache))) +
   geom_histogram(aes(fill = hospital_death), binwidth = 1, 
                  position = 'fill') +
-  facet_wrap(~ventilated_apache)+
+  facet_wrap(~ventilated_apache) +
   labs( x= 'bun_apache', y= 'Porcentaje',
-        title= 'Histograma de la cantidad de personas que
-que fallecen según la Urea en UCI')
+        title= 'Histograma del porcentaje de personas que fallecen
+        en UCI según la variable ventilated_apache', fill = "Muerte hospitalaria") +
+  scale_fill_manual(values=c("#8dd3c7","#e41a1c")) # verde, rojo
 
 
+# Transformar variables con puntos de corte -------------------------------
 
-# transformar variables con puntos de corte -------------------------------
-
-# edad --------------------------------------------------------------------
+# Edad --------------------------------------------------------------------
 
 data_demo %>%
   group_by(age = 1* (age %/% 1)) %>%
   summarise(hospital_death = (mean(as.numeric(hospital_death), na.rm = F))-1) %>%
-  ggplot(aes(age, hospital_death))+
-  geom_line()+
+  ggplot(aes(age, hospital_death)) +
+  geom_line(color = "#386cb0", size = 1.5) +
   scale_y_continuous(labels = scales::percent_format()) +
-  theme_classic()
+  geom_smooth(method = "lm", alpha = .2, colour="red") +
+  theme_classic() +
+  theme(text = element_text(size=14))
 
+# Días previos de hospitalización ----
+data_demo2 <- data_demo %>% filter(!is.na(hospital_death))
+data_demo2
 
-# Dias previos de hospitalizacion ----
-ggplot(data_demo, aes(pre_icu_los_days)) + 
-  geom_boxplot() + 
-  facet_grid(data_demo$hospital_death ~ .)
+ggplot(data_demo2, aes(log2(pre_icu_los_days))) + 
+  geom_boxplot(fill = c("#8dd3c7","#e41a1c")) + 
+  facet_grid(data_demo2$hospital_death ~ .) 
 
-plot(roc(data_demo$hospital_death, data_demo$pre_icu_los_days))
-auc_pre_icu_los_days <- auc(roc(data_demo$hospital_death, data_demo$pre_icu_los_days))
+plot(roc(data_demo2$hospital_death, data_demo2$pre_icu_los_days))
+auc_pre_icu_los_days <- auc(roc(data_demo2$hospital_death, data_demo2$pre_icu_los_days))
+auc_pre_icu_los_days
 #Area under the curve: 0.5378 # no tan buena variable, pero mas cercano 
 
 plot(table(data_demo$pre_icu_los_days, data_demo$hospital_death))
@@ -182,7 +186,8 @@ plot(prop.table(table(data_demo$preIcuLosDays_cat, data_demo$hospital_death), ma
 
 
 # Temperatura -------------------------------------------------------------
-#Temperatura se crean las variables dependiendo de la pendiente de mortalidad
+
+# Se crean las variables dependiendo de la pendiente de mortalidad
 data_demo <- mutate(data_demo, temp_apache_hipo = ifelse(data_demo$temp_apache <= 36.5, data_demo$temp_apache, NA))
 data_demo <- mutate(data_demo, temp_apache_hiper = ifelse(data_demo$temp_apache > 36.5, data_demo$temp_apache, NA))
 data_demo <- mutate(data_demo,
@@ -192,18 +197,21 @@ data_demo <- mutate(data_demo,
                                             ordered_result = TRUE)
 )
 
-#Ejemplo de la temperatura
+# Funciona con el método gam mejor que loess
 data_demo %>%
   group_by(temp_apache = 0.5* (temp_apache %/% 0.5)) %>%
   summarise(hospital_death = (mean(as.numeric(hospital_death), na.rm = F))-1) %>%
   ggplot(aes(temp_apache, hospital_death))+
-  geom_line()+
+  geom_line(color = "#386cb0", size = 1.5)+
   scale_y_continuous(labels = scales::percent_format()) +
-  theme_classic()
+  stat_smooth(method = "gam", alpha = .2, colour="red") +
+  theme_classic() +
+  theme(text = element_text(size=14))
 
 
-# Presion arterial --------------------------------------------------------
-#Presion areterial media se crean las variables dependiendo de la pendiente de mortalidad
+# Presión arterial --------------------------------------------------------
+
+# Presión areterial media se crean las variables dependiendo de la pendiente de mortalidad
 data_demo <- mutate(data_demo, map_apache_hipo = ifelse(data_demo$map_apache <= 95, data_demo$map_apache, NA))
 data_demo <- mutate(data_demo, map_apache_hiper = ifelse(data_demo$map_apache > 95, data_demo$map_apache, NA))
 data_demo <- mutate(data_demo,
@@ -212,18 +220,21 @@ data_demo <- mutate(data_demo,
                                                   "Hipertensión"),
                                    ordered_result = TRUE)
 )
-#ejemplo del grafico
+
+# Funciona con el método gam mejor que loess
 data_demo %>%
   group_by(map_apache = 5* (map_apache %/% 5)) %>%
   summarise(hospital_death = (mean(as.numeric(hospital_death), na.rm = F))-1) %>%
-  ggplot(aes(map_apache, hospital_death))+
-  geom_line()+
-  scale_y_continuous(labels = scales::percent_format())+
-  theme_classic()
-
+  ggplot(aes(map_apache, hospital_death)) +
+  geom_line(color = "#386cb0", size = 1.5) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  stat_smooth(method = "gam", alpha = .2, colour="red") +
+  theme_classic() +
+  theme(text = element_text(size=14))
 
 # Frecuencia cardiaca -----------------------------------------------------
-#Frecuencia cardiaca se crean las variables dependiendo de la pendiente de mortalidad
+
+# Se crean las variables dependiendo de la pendiente de mortalidad
 data_demo <- mutate(data_demo, heart_rate_apache_hipo = ifelse(data_demo$heart_rate_apache <= 50, data_demo$heart_rate_apache, NA))
 data_demo <- mutate(data_demo, heart_rate_apache_norm = ifelse(data_demo$heart_rate_apache > 50 & data_demo$heart_rate_apache < 100, data_demo$heart_rate_apache, NA))
 data_demo <- mutate(data_demo, heart_rate_apache_hiper = ifelse(data_demo$heart_rate_apache >= 100, data_demo$heart_rate_apache, NA))
@@ -234,18 +245,25 @@ data_demo <- mutate(data_demo,
                                                  "Taquicardia"),
                                   ordered_result = TRUE)
 )
-#ejemplo del grafico
-data_demo %>%
+
+data_demo2 <- data_demo %>% filter(!is.na(heart_rate_apache))
+data_demo2
+
+# Solo funciona con loess
+data_demo2 %>%
   group_by(heart_rate_apache = 20* (heart_rate_apache %/% 20)) %>%
   summarise(hospital_death = (mean(as.numeric(hospital_death), na.rm = F))-1) %>%
   ggplot(aes(heart_rate_apache, hospital_death))+
-  geom_line()+
+  geom_line(color = "#386cb0", size = 1.5)+
   scale_y_continuous(labels = scales::percent_format())+
-  theme_classic()
+  stat_smooth(method = "loess", alpha = .2, colour="red") +
+  theme_classic() +
+  theme(text = element_text(size=14))
 
 
 # Frecuencia respiratoria -------------------------------------------------
-#Frecuencia respiratorioa se crean las variables dependiendo de la pendiente de mortalidad
+
+# Se crean las variables dependiendo de la pendiente de mortalidad
 data_demo <- mutate(data_demo, resprate_apache_hipo = ifelse(data_demo$resprate_apache <= 10, data_demo$resprate_apache, NA))
 data_demo <- mutate(data_demo, resprate_apache_norm = ifelse(data_demo$resprate_apache > 10 & data_demo$resprate_apache <= 35, data_demo$resprate_apache, NA))
 data_demo <- mutate(data_demo, resprate_apache_hiper = ifelse(data_demo$resprate_apache > 35, data_demo$resprate_apache, NA))
@@ -256,24 +274,17 @@ data_demo <- mutate(data_demo,
                                                         "Taquipnea"),
                                          ordered_result = TRUE)
 )
-#Ejemplo del grafico
+
+# Solo funciona con loess
 data_demo %>%
   group_by(resprate_apache = 8* (resprate_apache %/% 8)) %>%
   summarise(hospital_death = (mean(as.numeric(hospital_death), na.rm = F))-1) %>%
   ggplot(aes(resprate_apache, hospital_death))+
-  geom_line()+
+  geom_line(color = "#386cb0", size = 1.5)+
   scale_y_continuous(labels = scales::percent_format())+
-  theme_classic()
-
-#edad es relacion continua
-#Ejemplo del grafico
-data_demo %>%
-  group_by(age = 5* (age %/% 5)) %>%
-  summarise(hospital_death = (mean(as.numeric(hospital_death), na.rm = F))-1) %>%
-  ggplot(aes(age, hospital_death))+
-  geom_line()+
-  scale_y_continuous(labels = scales::percent_format())+
-  theme_classic()
+  stat_smooth(method = "loess", alpha = .2, colour="red") +
+  theme_classic() +
+  theme(text = element_text(size=14))
 
 
 # BMI Indice de Masa Corporal ---------------------------------------------

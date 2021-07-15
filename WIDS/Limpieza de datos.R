@@ -107,7 +107,7 @@ data_demo <- mutate(data_demo, glasgow_apache =
                       gcs_motor_apache + 
                       gcs_verbal_apache)
 
-#Se transforman las variables de la escala de Glasgow de variable continua a variable ordinal
+# Se transforman las variables de la escala de Glasgow de variable continua a variable ordinal
 data_demo$gcs_eyes_apache <- factor(data_demo$gcs_eyes_apache, ordered = TRUE)
 data_demo$gcs_motor_apache <- factor(data_demo$gcs_motor_apache, ordered = TRUE)                                     
 data_demo$gcs_verbal_apache <- factor(data_demo$gcs_verbal_apache, ordered = TRUE)
@@ -115,7 +115,7 @@ data_demo$gcs_verbal_apache <- factor(data_demo$gcs_verbal_apache, ordered = TRU
 data_demo2 <- data_demo %>% filter(!is.na(ventilated_apache))
 data_demo2
 
-# Gráfico
+# Ejemplo de gráfico
 ggplot(data_demo2, aes(log(glasgow_apache))) +
   geom_histogram(aes(fill = hospital_death), binwidth = 1, 
                  position = 'fill') +
@@ -164,12 +164,7 @@ data_demo <- mutate(data_demo,
                                                            "De 1 día a 2 días",
                                                            "De 2 a una semana", 
                                                            "Mas de una semana"),
-                                            ordered_result = TRUE)
-)
-
-
-
-
+                                            ordered_result = TRUE))
 
 plot(table(data_demo$preIcuLosDays_cat, data_demo$hospital_death))
 #                   Sobrevivió Falleció   Cuanto riesgo aumentar
@@ -182,7 +177,6 @@ plot(prop.table(table(data_demo$preIcuLosDays_cat, data_demo$hospital_death), ma
 # Menos de 2 días   0.92049357 0.07950643   #0.75
 # De 2 a una semana 0.88199181 0.11800819   #1.25
 # Mas de una semana 0.80499220 0.19500780   #2
-
 
 
 # Temperatura -------------------------------------------------------------
@@ -312,153 +306,176 @@ data_demo <- mutate(data_demo,
 
 prop.table(table(data_demo$bmi, data_demo$bmi_cat), margin = 1)
 
-#Ejemplo del grafico
+# con loess se ve el efecto 
 data_demo %>%
   group_by(bmi = 5* (bmi %/% 5)) %>%
   summarise(hospital_death = (mean(as.numeric(hospital_death), na.rm = F))-1) %>%
-  ggplot(aes(bmi, hospital_death))+
-  geom_line()+
-  scale_y_continuous(labels = scales::percent_format())+
-  theme_classic()
+  ggplot(aes(bmi, hospital_death)) +
+  geom_line(color = "#386cb0", size = 1.5) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  stat_smooth(method = "loess", alpha = .2, colour="red") +
+  theme_classic() +
+  theme(text = element_text(size=14))
 
 
 # BUN nitrogeno urico -----------------------------------------------------
-#Ejemplo del grafico
+
 data_demo %>%
   group_by(bun_apache = 5* (bun_apache %/% 5)) %>%
   summarise(hospital_death = (mean(as.numeric(hospital_death), na.rm = F))-1) %>%
-  ggplot(aes(bun_apache, hospital_death))+
-  geom_line()+
-  scale_y_continuous(labels = scales::percent_format())+
-  theme_classic()
+  ggplot(aes(bun_apache, hospital_death)) +
+  geom_line(color = "#386cb0", size = 1.5) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  stat_smooth(method = "loess", alpha = .2, colour="red") +
+  theme_classic() +
+  theme(text = element_text(size=14))
 
-#grafico
-ggplot(data_demo, aes(log(bun_apache))) +
-  geom_histogram(aes(fill = hospital_death), binwidth = 0.5, 
+# Arf apache --------------------------------------------------------------
+
+data_demo2 <- data_demo %>% filter(!is.na(arf_apache))
+data_demo2
+
+ggplot(data_demo2, aes(log(glasgow_apache))) +
+  geom_histogram(aes(fill = hospital_death), binwidth = 1, 
                  position = 'fill') +
-  facet_wrap(~arf_apache)+
+  facet_wrap(~arf_apache) +
   labs( x= 'bun_apache', y= 'Porcentaje',
-        title= 'Histograma de la cantidad de personas que
-que fallecen según la Urea en UCI')
+        title= 'Histograma del porcentaje de personas que fallecen
+        en UCI según la variable arf_apache', fill = "Muerte hospitalaria") +
+  scale_fill_manual(values=c("#8dd3c7","#e41a1c")) # verde, rojo
 
-#Ejemplo del grafico
+# Creatinine apache --------------------------------------------------------------
+
 data_demo %>%
   group_by(creatinine_apache = 1.5* (creatinine_apache %/% 1.5)) %>%
   summarise(hospital_death = (mean(as.numeric(hospital_death), na.rm = F))-1) %>%
-  ggplot(aes(creatinine_apache, hospital_death))+
-  geom_line()+
-  scale_y_continuous(labels = scales::percent_format())+
-  theme_classic()
+  ggplot(aes(creatinine_apache, hospital_death)) +
+  geom_line(color = "#386cb0", size = 1.5) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  stat_smooth(method = "loess", alpha = .2, colour="red") +
+  theme_classic() +
+  theme(text = element_text(size=14))
 
-#Ejemplo del grafico
+# Urine output apache --------------------------------------------------------------
+
 data_demo %>%
   group_by(urineoutput_apache = 1400* (urineoutput_apache %/% 1400)) %>%
   summarise(hospital_death = (mean(as.numeric(hospital_death), na.rm = F))-1) %>%
   ggplot(aes(urineoutput_apache, hospital_death))+
-  geom_line()+
-  scale_y_continuous(labels = scales::percent_format())+
-  theme_classic()
-
-
+  geom_line(color = "#386cb0", size = 1.5) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  stat_smooth(method = "loess", alpha = .2, colour="red") +
+  theme_classic() +
+  theme(text = element_text(size=14))
 
 # Glucosa -----------------------------------------------------------------
-#Glucosa
+
 data_demo <- mutate(data_demo, glucose_apache_hipo = ifelse(data_demo$glucose_apache <= 90, data_demo$glucose_apache, NA))
 data_demo <- mutate(data_demo, glucose_apache_hiper = ifelse(data_demo$glucose_apache > 90, data_demo$glucose_apache, NA))
 data_demo <- mutate(data_demo,
                     glucose_cat = cut(data_demo$glucose_apache, breaks = c(-Inf, 90, Inf),
                                   levels(c) <- c("Hipoglicemia",
                                                  "Hiperglicemia"),
-                                  ordered_result = TRUE)
-)
-#Ejemplo del grafico
+                                  ordered_result = TRUE))
+
 data_demo %>%
   group_by(glucose_apache = 5* (glucose_apache %/% 5)) %>%
   summarise(hospital_death = (mean(as.numeric(hospital_death), na.rm = F))-1) %>%
-  ggplot(aes(glucose_apache, hospital_death))+
-  geom_line()+
-  scale_y_continuous(labels = scales::percent_format())+
-  theme_classic()
+  ggplot(aes(glucose_apache, hospital_death)) +
+  geom_line(color = "#386cb0", size = 1.5) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  stat_smooth(method = "loess", alpha = .2, colour="red") +
+  theme_classic() +
+  theme(text = element_text(size=14))
 
-#grafico
-ggplot(data_demo, aes(glucose_apache)) +
+# Diabetes mellitus -------------------------------------------------------
+
+data_demo2 <- data_demo %>% filter(!is.na(bun_apache))
+data_demo2
+
+ggplot(data_demo2, aes(glucose_apache)) +
   geom_histogram(aes(fill = hospital_death), binwidth = 10, 
                  position = 'fill') +
   facet_wrap(~diabetes_mellitus)+
   labs( x= 'bun_apache', y= 'Porcentaje',
-        title= 'Histograma de la cantidad de personas que
-que fallecen según la Urea en UCI')
-
+        title= 'Histograma del porcentaje de personas que
+que fallecen según la variable diabetes mellitus en UCI') +
+  scale_fill_manual(values=c("#8dd3c7","#e41a1c")) # verde, rojo
 
 # Sodio -------------------------------------------------------------------
-#Sodio
+
 data_demo <- mutate(data_demo, sodium_apache_hipo = ifelse(data_demo$sodium_apache <= 140, data_demo$sodium_apache, NA))
 data_demo <- mutate(data_demo, sodium_apache_hiper = ifelse(data_demo$sodium_apache > 140, data_demo$sodium_apache, NA))
 data_demo <- mutate(data_demo,
                     sodium_cat = cut(data_demo$sodium_apache, breaks = c(-Inf, 140, Inf),
                                       levels(c) <- c("Hiponatremia",
                                                      "Hipernatremia"),
-                                      ordered_result = TRUE)
-)
-#Ejemplo del grafico
+                                      ordered_result = TRUE))
+
 data_demo %>%
   group_by(sodium_apache = 2* (sodium_apache %/% 2)) %>%
   summarise(hospital_death = (mean(as.numeric(hospital_death), na.rm = F))-1) %>%
-  ggplot(aes(sodium_apache, hospital_death))+
-  geom_line()+
-  scale_y_continuous(labels = scales::percent_format())+
-  theme_classic()
+  ggplot(aes(sodium_apache, hospital_death)) +
+  geom_line(color = "#386cb0", size = 1.5) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  stat_smooth(method = "loess", alpha = .2, colour="red") +
+  theme_classic() +
+  theme(text = element_text(size=14))
 
 
 # Hematocrito -------------------------------------------------------------
-#hiper hacerlo polipidal
+
+# hiper hacerlo polipidal
+
 data_demo <- mutate(data_demo, hematocrit_apache_hipo = ifelse(data_demo$hematocrit_apache <= 40, data_demo$hematocrit_apache, NA))
 data_demo <- mutate(data_demo, hematocrit_apache_hiper = ifelse(data_demo$hematocrit_apache > 40, data_demo$hematocrit_apache, NA))
 data_demo <- mutate(data_demo,
                     hematocrit_cat = cut(data_demo$hematocrit_apache, breaks = c(-Inf, 40, Inf),
                                      levels(c) <- c("Anemia",
                                                     "Policitemia"),
-                                     ordered_result = TRUE)
-)
+                                     ordered_result = TRUE))
 
 prop.table(table(data_demo$hematocrit_apache, data_demo$hematocrit_cat), margin = 1)
 
-#Ejemplo del grafico
 data_demo %>%
   group_by(hematocrit_apache = 5* (hematocrit_apache %/% 5)) %>%
   summarise(hospital_death = (mean(as.numeric(hospital_death), na.rm = F))-1) %>%
-  ggplot(aes(hematocrit_apache, hospital_death))+
-  geom_line()+
-  scale_y_continuous(labels = scales::percent_format())+
-  theme_classic()
+  ggplot(aes(hematocrit_apache, hospital_death)) +
+  geom_line(color = "#386cb0", size = 1.5) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  stat_smooth(method = "loess", alpha = .2, colour="red") +
+  theme_classic() +
+  theme(text = element_text(size=14))
 
 
 # Globulos blancos --------------------------------------------------------
-#hiper hacerlo polipidal
+
+# hiper hacerlo polipidal
 data_demo <- mutate(data_demo, wbc_apache_hipo = ifelse(data_demo$wbc_apache <= 6, data_demo$wbc_apache, NA))
 data_demo <- mutate(data_demo, wbc_apache_hiper = ifelse(data_demo$wbc_apache > 6, data_demo$wbc_apache, NA))
 data_demo <- mutate(data_demo,
                     wbc_cat = cut(data_demo$wbc_apache, breaks = c(-Inf, 6, Inf),
                                          levels(c) <- c("Neutropenia",
                                                         "Leucocitosis"),
-                                         ordered_result = TRUE)
-)
+                                         ordered_result = TRUE))
 
 prop.table(table(data_demo$wbc_apache, data_demo$wbc_cat), margin = 1)
 
-#Ejemplo del grafico
 data_demo %>%
   group_by(wbc_apache = 2* (wbc_apache %/% 2)) %>%
   summarise(hospital_death = (mean(as.numeric(hospital_death), na.rm = F))-1) %>%
-  ggplot(aes(wbc_apache, hospital_death))+
-  geom_line()+
-  scale_y_continuous(labels = scales::percent_format())+
-  theme_classic()
+  ggplot(aes(wbc_apache, hospital_death)) +
+  geom_line(color = "#386cb0", size = 1.5) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  stat_smooth(method = "loess", alpha = .2, colour="red") +
+  theme_classic() +
+  theme(text = element_text(size=14))
 
+# Bilirubin_apache --------------------------------------------------------
 
-# bilirubin_apache --------------------------------------------------------
-# se recomienda quitar los 6 pacientes con bilirrubina igual o mayor a 40 porque se comportan como outliyers
-# bilirrubina no necesita cat porque tiene una relacion lineal con mortalidad
+# se recomienda quitar los 6 pacientes con bilirrubina igual o mayor a 40 porque se comportan como outliers
+# bilirrubina no necesita cat porque tiene una relación lineal con mortalidad
+
 hist(data_demo$bilirubin_apache)
 table(data_demo$bilirubin_apache, data_demo$hospital_death)
 
@@ -468,10 +485,12 @@ data_demo <- data_demo %>%
 data_demo %>%
   group_by(bilirubin_apache = 6* (bilirubin_apache %/% 6)) %>%
   summarise(hospital_death = (mean(as.numeric(hospital_death), na.rm = F))-1) %>%
-  ggplot(aes(bilirubin_apache, hospital_death))+
-  geom_line()+
-  scale_y_continuous(labels = scales::percent_format())+
-  theme_classic()
+  ggplot(aes(bilirubin_apache, hospital_death)) +
+  geom_line(color = "#386cb0", size = 1.5) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  stat_smooth(method = "lm", alpha = .2, colour="red") +
+  theme_classic() +
+  theme(text = element_text(size=14))
 
 
 # albumin_apache ----------------------------------------------------------
@@ -486,39 +505,45 @@ data_demo <- mutate(data_demo,
                     albumin_cat = cut(data_demo$albumin_apache, breaks = c(-Inf, 3.3, Inf),
                                   levels(c) <- c("Hipoalbuminemia",
                                                  "Normoalbuminemia"),
-                                  ordered_result = TRUE)
-)
+                                  ordered_result = TRUE))
 
 prop.table(table(data_demo$albumin_apache, data_demo$albumin_cat), margin = 1)
 
 data_demo %>%
   group_by(albumin_apache = 0.5* (albumin_apache %/% 0.5)) %>%
   summarise(hospital_death = (mean(as.numeric(hospital_death), na.rm = F))-1) %>%
-  ggplot(aes(albumin_apache, hospital_death))+
-  geom_line()+
-  scale_y_continuous(labels = scales::percent_format())+
-  theme_classic()
+  ggplot(aes(albumin_apache, hospital_death)) +
+  geom_line(color = "#386cb0", size = 1.5) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  stat_smooth(method = "lm", alpha = .2, colour="red") +
+  theme_classic() +
+  theme(text = element_text(size=14))
 
 
 # fio2_apache -------------------------------------------------------------
-# hay relacion lineal entre FIO2 y mortalidad
-# el FIO2 interactua con PaOS
+# hay relación lineal entre FIO2 y mortalidad
+# el FIO2 interactúa con PaOS
+
 hist(data_demo$fio2_apache)
 
 data_demo %>%
   group_by(fio2_apache = 0.1* (fio2_apache %/% 0.1)) %>%
   summarise(hospital_death = (mean(as.numeric(hospital_death), na.rm = F))-1) %>%
-  ggplot(aes(fio2_apache, hospital_death))+
-  geom_line()+
-  scale_y_continuous(labels = scales::percent_format())+
-  theme_classic()
+  ggplot(aes(fio2_apache, hospital_death)) +
+  geom_line(color = "#386cb0", size = 1.5) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  stat_smooth(method = "lm", alpha = .2, colour="red") +
+  theme_classic() +
+  theme(text = element_text(size=14))
 
 
 # paco2_apache ------------------------------------------------------------
-# se coloco como punto de corte de 45
-# Se debe interactuar con el ph
-hist(data_demo$paco2_apache)
-table(data_demo$paco2_apache, data_demo$hospital_death)
+
+# se colocó como punto de corte de 45
+# Se debe interactuar con el pH
+
+#hist(data_demo$paco2_apache)
+#table(data_demo$paco2_apache, data_demo$hospital_death)
 
 data_demo <- mutate(data_demo, paco2_apache_hipo = ifelse(data_demo$paco2_apache <= 45, data_demo$paco2_apache, NA))
 data_demo <- mutate(data_demo, paco2_apache_hiper = ifelse(data_demo$paco2_apache > 45, data_demo$paco2_apache, NA))
@@ -526,35 +551,38 @@ data_demo <- mutate(data_demo,
                     paco2_cat = cut(data_demo$paco2_apache, breaks = c(-Inf, 45, Inf),
                                   levels(c) <- c("Hipocapnia",
                                                  "Hipercapnia"),
-                                  ordered_result = TRUE)
-)
+                                  ordered_result = TRUE))
 
 data_demo %>%
   group_by(paco2_apache = 5* (paco2_apache %/% 5)) %>%
   summarise(hospital_death = (mean(as.numeric(hospital_death), na.rm = F))-1) %>%
-  ggplot(aes(paco2_apache, hospital_death))+
-  geom_line()+
-  scale_y_continuous(labels = scales::percent_format())+
-  theme_classic()
-
+  ggplot(aes(paco2_apache, hospital_death)) +
+  geom_line(color = "#386cb0", size = 1.5) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  stat_smooth(method = "loess", alpha = .2, colour="red") +
+  theme_classic() +
+  theme(text = element_text(size=14))
 
 # paco2_for_ph_apache -----------------------------------------------------
 # el exactamente el mismo valor que el paco2_apache
-hist(data_demo$paco2_for_ph_apache)
-plot(data_demo$paco2_for_ph_apache, data_demo$paco2_apache)
+
+#hist(data_demo$paco2_for_ph_apache)
+#plot(data_demo$paco2_for_ph_apache, data_demo$paco2_apache)
 
 data_demo %>%
   group_by(paco2_for_ph_apache = 5* (paco2_for_ph_apache %/% 5)) %>%
   summarise(hospital_death = (mean(as.numeric(hospital_death), na.rm = F))-1) %>%
-  ggplot(aes(paco2_for_ph_apache, hospital_death))+
-  geom_line()+
-  scale_y_continuous(labels = scales::percent_format())+
-  theme_classic()
-
+  ggplot(aes(paco2_for_ph_apache, hospital_death)) +
+  geom_line(color = "#386cb0", size = 1.5) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  stat_smooth(method = "loess", alpha = .2, colour="red") +
+  theme_classic() +
+  theme(text = element_text(size=14))
 
 # pao2_apache -------------------------------------------------------------
+
 # punto de corte 100
-hist(data_demo$pao2_apache)
+#hist(data_demo$pao2_apache)
 
 data_demo <- mutate(data_demo, pao2_apache_hipo = ifelse(data_demo$pao2_apache <= 100, data_demo$pao2_apache, NA))
 data_demo <- mutate(data_demo, pao2_apache_hiper = ifelse(data_demo$pao2_apache > 100, data_demo$pao2_apache, NA))
@@ -562,29 +590,29 @@ data_demo <- mutate(data_demo,
                     pao2_cat = cut(data_demo$pao2_apache, breaks = c(-Inf, 100, Inf),
                                     levels(c) <- c("Hipoxia",
                                                    "Hiperoxia"),
-                                    ordered_result = TRUE)
-)
+                                    ordered_result = TRUE))
 
 data_demo %>%
   group_by(pao2_apache = 25* (pao2_apache %/% 25)) %>%
   summarise(hospital_death = (mean(as.numeric(hospital_death), na.rm = F))-1) %>%
-  ggplot(aes(pao2_apache, hospital_death))+
-  geom_line()+
-  scale_y_continuous(labels = scales::percent_format())+
-  theme_classic()
-
+  ggplot(aes(pao2_apache, hospital_death)) +
+  geom_line(color = "#386cb0", size = 1.5) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  stat_smooth(method = "loess", alpha = .2, colour="red") +
+  theme_classic() +
+  theme(text = element_text(size=14))
 
 # ph_apache ---------------------------------------------------------------
-hist(data_demo$ph_apache)
-#punto de corte en 7.34
+
+# hist(data_demo$ph_apache)
+# punto de corte en 7.34
 data_demo <- mutate(data_demo, ph_apache_hipo = ifelse(data_demo$ph_apache <= 7.33, data_demo$ph_apache, NA))
 data_demo <- mutate(data_demo, ph_apache_hiper = ifelse(data_demo$ph_apache > 7.33, data_demo$ph_apache, NA))
 data_demo <- mutate(data_demo,
                     ph_cat = cut(data_demo$ph_apache, breaks = c(-Inf, 7.33, Inf),
                                    levels(c) <- c("Alcalisis",
                                                   "Acidosis"),
-                                   ordered_result = TRUE)
-)
+                                   ordered_result = TRUE))
 
 data_demo %>%
   group_by(ph_apache = 0.04* (ph_apache %/% 0.04)) %>%
@@ -592,4 +620,6 @@ data_demo %>%
   ggplot(aes(ph_apache, hospital_death))+
   geom_line()+
   scale_y_continuous(labels = scales::percent_format())+
-  theme_classic()
+  stat_smooth(method = "loess", alpha = .2, colour="red") +
+  theme_classic() +
+  theme(text = element_text(size=14))
